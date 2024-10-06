@@ -45,6 +45,7 @@ Fala comigo e vamos colocar o seu projeto no ar!`
         mensagemFinal
       )}`
       window.open(urlComNumero, "_blank")
+      handleProximo()
     } else {
       alert("Nenhum número disponível ou você chegou ao final da lista.")
     }
@@ -117,21 +118,6 @@ Fala comigo e vamos colocar o seu projeto no ar!`
         }}
       >
         Enviar Mensagem
-      </button>
-
-      <button
-        onClick={handleProximo}
-        style={{
-          padding: "0.5rem",
-          fontSize: "1rem",
-          backgroundColor: "#28a745",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-          borderRadius: "5px",
-        }}
-      >
-        Próximo Número
       </button>
 
       {/* Exibe o número atual */}
