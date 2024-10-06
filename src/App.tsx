@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
+import * as XLSX from "xlsx"
 
 function App() {
-  const [numero, setNumero] = useState("");
-  const [mensagem, setMensagem] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [numeros, setNumeros] = useState([])
+  const [mensagem, setMensagem] = useState("")
 
-  const baseURL = "https://web.whatsapp.com/send?phone=55";
-  const defaultMessage = 
-`*Sua concorrência já está online, e você?* 🧐
+  const baseURL = "https://web.whatsapp.com/send?phone="
+  const defaultMessage = `*Sua concorrência já está online, e você?* 🧐
 
 Hoje, quem não está investindo em uma *presença digital* está perdendo espaço. Na Majors Solutions, ajudamos empresas como *Fiat* e *Jeep* a se destacarem com soluções completas: desde *sites* até *softwares personalizados* para automatizar processos e gerar resultados.
 
@@ -15,21 +16,50 @@ Temos uma equipe pronta para criar a solução ideal para o seu negócio, seja u
 Quer ver como isso pode transformar seu negócio? 
 Dê uma olhadinha na Majors 
 👉🏼 https://servicos.majorssolutions.com.br/ 
-Fala comigo e vamos colocar o seu projeto no ar!`;
+Fala comigo e vamos colocar o seu projeto no ar!`
 
-  const handleEnviar = () => {
-    if (numero) {
-      const mensagemFinal = mensagem ? mensagem : defaultMessage;
-      const urlComNumero = `${baseURL}${numero}&text=${encodeURIComponent(
-        mensagemFinal
-      )}`;
-      window.open(urlComNumero, "_blank");
-    } else {
-      alert("Por favor, insira um número válido.");
+  // Função para carregar o arquivo Excel
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    const reader = new FileReader()
+
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result)
+      const workbook = XLSX.read(data, { type: "array" })
+      const sheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[sheetName]
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+
+      // Pegando os valores de Country Code (coluna A) e Phone Number (coluna C)
+      const loadedNumeros = jsonData.map((row) => `${row[0]}${row[2]}`)
+      setNumeros(loadedNumeros)
     }
-  };
 
-  return (
+    reader.readAsArrayBuffer(file)
+  }
+  const handleEnviar = () => {
+    if (numeros.length > 0 && currentIndex < numeros.length) {
+      const numeroAtual = numeros[currentIndex]
+      const mensagemFinal = mensagem ? mensagem : defaultMessage
+      const urlComNumero = `${baseURL}${numeroAtual}&text=${encodeURIComponent(
+        mensagemFinal
+      )}`
+      window.open(urlComNumero, "_blank")
+    } else {
+      alert("Nenhum número disponível ou você chegou ao final da lista.")
+    }
+  }
+
+  // Função para ir para o próximo número
+  const handleProximo = () => {
+    if (currentIndex < numeros.length - 1) {
+      setCurrentIndex(currentIndex + 1)
+    } else {
+      alert("Você já enviou para todos os números.")
+    }
+  }
+
+    return (
     <div
       style={{
         display: "flex",
@@ -48,17 +78,18 @@ Fala comigo e vamos colocar o seu projeto no ar!`;
       >
         Envie uma mensagem de texto e áudio
       </h1>
+
+      {/* Upload do arquivo Excel */}
       <input
-        type="text"
-        placeholder="Insira o número"
-        value={numero}
-        onChange={(e) => setNumero(e.target.value)}
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleFileUpload}
         style={{
-          padding: "0.5rem",
-          fontSize: "1rem",
           marginBottom: "1rem",
         }}
       />
+
+      {/* Campo de mensagem opcional */}
       <textarea
         placeholder="Digite sua mensagem (opcional)"
         value={mensagem}
@@ -71,6 +102,7 @@ Fala comigo e vamos colocar o seu projeto no ar!`;
           width: "300px",
         }}
       />
+
       <button
         onClick={handleEnviar}
         style={{
@@ -81,10 +113,33 @@ Fala comigo e vamos colocar o seu projeto no ar!`;
           border: "none",
           cursor: "pointer",
           borderRadius: "5px",
+          marginBottom: "1rem",
         }}
       >
         Enviar Mensagem
       </button>
+
+      <button
+        onClick={handleProximo}
+        style={{
+          padding: "0.5rem",
+          fontSize: "1rem",
+          backgroundColor: "#28a745",
+          color: "#fff",
+          border: "none",
+          cursor: "pointer",
+          borderRadius: "5px",
+        }}
+      >
+        Próximo Número
+      </button>
+
+      {/* Exibe o número atual */}
+      {numeros.length > 0 && (
+        <p style={{ marginTop: "1rem" }}>
+          Número atual: {numeros[currentIndex]}
+        </p>
+      )}
     </div>
   );
 }
